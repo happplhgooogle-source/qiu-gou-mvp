@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>校园二手 · 求购</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c1c1e;
+    --sub: #8a8a8f;
+    --line: #ececef;
+    --primary: #3b6cff;
+    --primary-soft: #e7eeff;
+    --danger: #ff4d4f;
+    --warn: #ff8a00;
+    --radius: 14px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #dfe2e6; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 手机外框（PC 上才能看出手机感，手机上自适应） */
+  .stage {
+    width: 100%;
+    max-width: 390px;
+    margin: 0 auto;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,.08);
+  }
+  @media (min-width: 540px) {
+    .stage { margin: 20px auto; height: calc(100dvh - 40px); max-height: 844px; border-radius: 28px; overflow: hidden; }
+  }
+
+  /* 顶部状态栏模拟 */
+  .statusbar {
+    height: 44px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .statusbar .right { display: flex; gap: 6px; align-items: center; }
+  .statusbar svg { display: block; }
+
+  /* 导航 */
+  .nav {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: var(--bg);
+  }
+  .nav .title { font-size: 17px; font-weight: 600; }
+  .nav .title-hero { font-size: 30px; font-weight: 700; letter-spacing: 1px; }
+  .nav .left, .nav .right {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .nav .left { left: 4px; }
+  .nav .right { right: 8px; }
+  .nav .ghost-btn {
+    color: var(--primary);
+    font-size: 15px; font-weight: 500;
+    padding: 6px 4px;
+  }
+  .nav .ghost-btn:disabled { color: var(--sub); }
+
+  /* 内容滚动区 */
+  .scroll {
+    position: absolute;
+    top: 88px;
+    bottom: 84px;
+    left: 0; right: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 16px 24px;
+  }
+  .scroll.with-fab { bottom: 84px; padding-bottom: 96px; }
+
+  /* 底部 Tab */
+  .tabbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: calc(64px + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: #fff;
+    border-top: 1px solid var(--line);
+    display: flex;
+    z-index: 5;
+  }
+  .tab {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--sub);
+    cursor: pointer;
+    user-select: none;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.active { color: var(--primary); }
+  .tab .pub {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    position: relative;
+    top: -16px;
+    box-shadow: 0 8px 18px rgba(59,108,255,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 300;
+  }
+
+  /* 搜索框 */
+  .search {
+    margin: 8px 0 12px;
+    background: #fff;
+    border-radius: 999px;
+    height: 40px;
+    display: flex; align-items: center;
+    padding: 0 14px;
+    color: var(--sub);
+  }
+  .search input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-size: 14px; color: var(--text);
+    margin-left: 8px;
+  }
+  .search input::placeholder { color: #b0b0b6; }
+
+  /* 列表卡片 */
+  .list-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex; gap: 12px;
+    align-items: center;
+    cursor: pointer;
+  }
+  .avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d8e1ff, #f0e6ff);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .list-body { flex: 1; min-width: 0; }
+  .title-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 15px; font-weight: 500;
+  }
+  .title-row .tag {
+    display: inline-block;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .price-row {
+    margin-top: 6px;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .price { color: var(--primary); font-weight: 600; font-size: 18px; }
+  .price-row .time { margin-left: auto; font-size: 12px; color: var(--sub); }
+  .meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--sub);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* 浮动发布按钮（右下角悬浮：圆形 + + 胶囊"发布求购"） */
+  .fab-wrap {
+    position: absolute;
+    right: 16px;
+    bottom: calc(64px + var(--safe-bottom) + 12px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .fab {
+    pointer-events: auto;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary);
+    border: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .fab-label {
+    pointer-events: auto;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 18px rgba(59,108,255,.35);
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* 表单 */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .form {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin-top: 8px;
+    padding: 6px 0;
+  }
+  .field {
+    padding: 15px 16px;
+  }
+  .field .label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .field .label .label-left {
+    font-weight: 400;
+    color: var(--text);
+  }
+  .field .label .req { color: var(--danger); margin-right: 3px; }
+  .field .label-count { font-size: 12px; color: var(--sub); }
+  .field .control { width: 100%; min-width: 0; }
+  .control-inline { display: flex; align-items: center; gap: 6px; }
+  .inline-suffix { color: var(--sub); font-size: 14px; }
+  .field input[type=text],
+  .field textarea {
+    width: 100%;
+    border: none; outline: none;
+    font-size: 15px;
+    background: transparent;
+    resize: none;
+    color: var(--text);
+    font-family: inherit;
+    padding: 0;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: #b8b8bf; }
+  .field textarea { min-height: 72px; line-height: 1.5; }
+  .ta-count { text-align: right; font-size: 12px; color: var(--sub); margin-top: 4px; }
+  .select {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 2px 0;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .select.placeholder { color: #b8b8bf; }
+  .select .chev { color: #c8c8cf; }
+  .select-wrap { position: relative; }
+  .dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.14);
+    padding: 4px 0;
+    z-index: 20;
+    overflow: hidden;
+  }
+  .dropdown-item {
+    padding: 12px 14px;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .dropdown-item:hover { background: #f3f4f6; }
+  .dropdown-item.active { color: var(--primary); font-weight: 500; }
+
+  /* 错误态 */
+  .field.error input, .field.error textarea {
+    border-bottom: 1px dashed var(--danger);
+    padding-bottom: 5px;
+  }
+  .field-hint {
+    color: var(--danger);
+    font-size: 12px;
+    padding: 0 16px 4px;
+    display: none;
+  }
+  .field.error + .field-hint { display: block; }
+
+  /* 提示条 */
+  .tip-bar {
+    margin-top: 14px;
+    background: var(--primary-soft);
+    color: #3a5bd0;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    line-height: 1.5;
+  }
+
+  /* 详情页 */
+  .hero-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 8px;
+  }
+  .hero-title {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 12px;
+  }
+  .hero-title .bk-tag {
+    font-size: 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .hero-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+  .hero-meta {
+    color: var(--sub);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hero-meta .row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hero-meta .icon { font-size: 14px; }
+
+  .desc-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #3a3a3f;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .desc-card .label {
+    font-size: 13px;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+
+  .seller {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .seller .av {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd6e0, #d6e8ff);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .seller .info { flex: 1; min-width: 0; }
+  .seller .name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .seller .stats { font-size: 12px; color: var(--sub); }
+  .seller .contact-btn {
+    padding: 8px 14px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* 详情页底部操作 */
+  .detail-action {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 12px 16px calc(12px + var(--safe-bottom));
+    background: #fff;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 12px;
+    z-index: 5;
+  }
+  .detail-action .collect {
+    flex: 0 0 52px;
+    height: 48px;
+    border-radius: 24px;
+    background: #f3f4f6;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 11px; color: var(--sub);
+    gap: 2px;
+    cursor: pointer;
+  }
+  .detail-action .contact {
+    flex: 1;
+    height: 48px;
+    border-radius: 24px;
+    background: var(--primary);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(59,108,255,.3);
+  }
+
+  /* 浮层：联系方式 */
+  .mask {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 30;
+    display: none;
+    align-items: flex-end;
+  }
+  .mask.show { display: flex; }
+  .sheet {
+    width: 100%;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px calc(20px + var(--safe-bottom));
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .sheet-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .sheet-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .sheet-row:last-of-type { border-bottom: none; }
+  .sheet-row .v { color: var(--text); }
+  .copy-btn {
+    color: var(--primary);
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+  .sheet-tip {
+    text-align: center;
+    font-size: 12px;
+    color: var(--warn);
+    margin-top: 12px;
+  }
+  .sheet-close {
+    margin: 16px auto 0;
+    display: block;
+    background: #f3f4f6;
+    color: var(--text);
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 12px 0;
+    border-radius: 24px;
+    width: 100%;
+    cursor: pointer;
+  }
+  /* 留言框 */
+  .sheet textarea {
+    width: 100%;
+    height: 96px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .sheet textarea::placeholder { color: #b8b8bf; }
+  .msg-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--sub);
+    margin: 6px 2px 14px;
+  }
+  .sheet-send {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 0;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(59,108,255,.3);
+  }
+
+  /* 各种空 / 异常态 */
+  .state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    color: var(--sub);
+    padding: 60px 30px;
+  }
+  .state .emoji {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 16px;
+    opacity: .8;
+  }
+  .state .text { font-size: 14px; margin-bottom: 16px; }
+  .state button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .state button.ghost {
+    background: #fff;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+
+  /* 骨架屏 */
+  .skeleton {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex; gap: 12px;
+    align-items: center;
+  }
+  .sk { background: linear-gradient(90deg, #eee 25%, #f5f5f7 37%, #eee 63%);
+       background-size: 400% 100%;
+       animation: shimmer 1.4s ease infinite;
+       border-radius: 6px; }
+  @keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+  .sk.round { border-radius: 50%; }
+
+  /* Toast */
+  .toast {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,.78);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .toast.show { opacity: 1; }
+
+  /* 小工具类 */
+  .row-gap-12 { height: 12px; }
+  .small-info {
+    font-size: 12px; color: var(--sub);
+    padding: 8px 4px; line-height: 1.5;
+  }
+  .small-info b { color: var(--text); font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<div class="stage" id="app">
+  <!-- 顶部状态栏 -->
+  <div class="statusbar" style="background:var(--bg);">
+    <span>12:00</span>
+    <span class="right">
+      <svg width="16" height="11" viewBox="0 0 16 11"><path d="M1 7h2v3H1zM5 5h2v5H5zM9 3h2v7H9zM13 1h2v9h-2z" fill="#1c1c1e"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2.5C5.4 2.5 3.1 3.6 1.5 5.3l1 1.1C3.9 4.9 5.9 4 8 4s4.1.9 5.5 2.4l1-1.1C12.9 3.6 10.6 2.5 8 2.5zm0 3c-1.7 0-3.3.6-4.5 1.7l1 1.1C5.5 7.4 6.7 7 8 7s2.5.4 3.5 1.3l1-1.1C11.3 6.1 9.7 5.5 8 5.5zm0 3c-.8 0-1.6.3-2.2.8l2.2 2.3 2.2-2.3c-.6-.5-1.4-.8-2.2-.8z" fill="#1c1c1e"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#1c1c1e"/><rect x="2" y="2" width="17" height="8" rx="1.5" fill="#1c1c1e"/><rect x="23.5" y="3.5" width="2" height="5" rx="1" fill="#1c1c1e"/></svg>
+    </span>
+  </div>
+
+  <!-- ========== 0. 首页 占位 ========== -->
+  <div class="page" id="page-home">
+    <div class="nav"><div class="title">首页</div></div>
+    <div class="scroll">
+      <div class="state">
+        <div class="emoji">🏠</div>
+        <div class="text">首页内容正在搭建中<br/>点击底部「求购」查看求购广场</div>
+        <button onclick="goList()">去求购广场</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 发布 占位 ========== -->
+  <div class="page" id="page-pub">
+    <div class="nav"><div class="title">发布</div></div>
+    <div class="scroll">
+      <div class="state">
+        <div class="emoji">📦</div>
+        <div class="text">发布内容正在搭建中<br/>这里是发布二手商品的地方，不是求购哦</div>
+        <button onclick="openPublish()">去发布求购</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 4. 信息 占位 ========== -->
+  <div class="page" id="page-msg">
+    <div class="nav"><div class="title">信息</div></div>
+    <div class="scroll">
+      <div class="state">
+        <div class="emoji">💬</div>
+        <div class="text">还没有消息<br/>联系卖家后会在这里出现</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 5. 我的 占位 ========== -->
+  <div class="page" id="page-me">
+    <div class="nav"><div class="title">我的</div></div>
+    <div class="scroll">
+      <div class="state">
+        <div class="emoji">👤</div>
+        <div class="text">个人中心<br/>登录后可查看我的求购、收藏、消息</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 1. 求购广场 ========== -->
+  <div class="page active" id="page-list">
+    <div class="nav">
+      <div class="title title-hero">求购广场</div>
+    </div>
+    <div class="scroll with-fab" id="list-scroll">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8a8f" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="search-input" placeholder="搜索求购内容" />
+      </div>
+
+      <!-- 正常状态 -->
+      <div id="list-normal">
+        <div class="list-item" data-id="1">
+          <div class="avatar">📚</div>
+          <div class="list-body">
+            <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">数据结构教材</span></div>
+            <div class="price-row"><span class="price">¥32</span><span class="time">2天前发布</span></div>
+            <div class="meta">📍 距离你500m</div>
+          </div>
+        </div>
+        <div class="list-item" data-id="2">
+          <div class="avatar">📘</div>
+          <div class="list-body">
+            <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">c语言教材</span></div>
+            <div class="price-row"><span class="price">¥20</span><span class="time">2天前发布</span></div>
+            <div class="meta">📍 距离你500m</div>
+          </div>
+        </div>
+        <div class="list-item" data-id="3">
+          <div class="avatar">📗</div>
+          <div class="list-body">
+            <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">英语六级资料</span></div>
+            <div class="price-row"><span class="price">¥30</span><span class="time">3天前发布</span></div>
+            <div class="meta">📍 距离你500m</div>
+          </div>
+        </div>
+        <div class="list-item" data-id="4">
+          <div class="avatar">🌀</div>
+          <div class="list-body">
+            <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">小风扇</span></div>
+            <div class="price-row"><span class="price">¥10</span><span class="time">3天前发布</span></div>
+            <div class="meta">📍 距离你500m</div>
+          </div>
+        </div>
+        <div class="list-item" data-id="5">
+          <div class="avatar">💡</div>
+          <div class="list-body">
+            <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">台灯</span></div>
+            <div class="price-row"><span class="price">¥26</span><span class="time"></span></div>
+            <div class="meta">📍 距离你500m</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 加载中骨架 -->
+      <div id="list-loading" style="display:none;">
+        <div class="skeleton"><div class="sk round" style="width:48px;height:48px"></div><div style="flex:1"><div class="sk" style="height:14px;width:60%;margin-bottom:8px"></div><div class="sk" style="height:12px;width:40%"></div></div></div>
+        <div class="skeleton"><div class="sk round" style="width:48px;height:48px"></div><div style="flex:1"><div class="sk" style="height:14px;width:50%;margin-bottom:8px"></div><div class="sk" style="height:12px;width:35%"></div></div></div>
+        <div class="skeleton"><div class="sk round" style="width:48px;height:48px"></div><div style="flex:1"><div class="sk" style="height:14px;width:55%;margin-bottom:8px"></div><div class="sk" style="height:12px;width:38%"></div></div></div>
+      </div>
+
+      <!-- 加载失败 -->
+      <div id="list-error" class="state" style="display:none;">
+        <div class="emoji">📵</div>
+        <div class="text">加载失败，请检查网络设置</div>
+        <button onclick="loadList(true)">重新加载</button>
+      </div>
+
+      <!-- 无求购信息 -->
+      <div id="list-empty" class="state" style="display:none;">
+        <div class="emoji">🛒</div>
+        <div class="text">暂无求购信息</div>
+      </div>
+
+      <!-- 网络异常 -->
+      <div id="list-network" class="state" style="display:none;">
+        <div class="emoji">🛰️</div>
+        <div class="text">网络好像异常了，请检查网络设置</div>
+        <button onclick="loadList(true)">重新加载</button>
+      </div>
+
+      <!-- 搜索无结果 -->
+      <div id="list-noresult" class="state" style="display:none;">
+        <div class="emoji">🔍</div>
+        <div class="text">搜索无结果，请换个词试试</div>
+        <button class="ghost" onclick="resetSearch()">清空搜索</button>
+      </div>
+
+      <!-- 求购过期 -->
+      <div id="list-expired" class="state" style="display:none;">
+        <div class="emoji">⏳</div>
+        <div class="text">求购已过期，正在为你刷新</div>
+        <button onclick="loadList(true)">重新加载</button>
+      </div>
+
+      <div class="small-info" id="list-hint">
+        发布超过<b>7天</b>的求购会自动隐藏。
+      </div>
+    </div>
+
+    <!-- 浮动发布按钮（右下角悬浮：椭圆胶囊"发布求购"） -->
+    <div class="fab-wrap">
+      <div class="fab-label" onclick="openPublish()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        发布求购
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 2. 发布求购 ========== -->
+  <div class="page" id="page-publish">
+    <div class="nav">
+      <div class="left" onclick="goList()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="title">发布求购</div>
+      <div class="right">
+        <span class="ghost-btn" id="publish-btn" onclick="submitPublish()">发布</span>
+      </div>
+    </div>
+    <div class="scroll" id="publish-scroll">
+      <div class="form">
+        <div class="field" id="f-name">
+          <div class="label">
+            <span class="label-left"><span class="req">*</span>求购商品名称</span>
+            <span class="label-count" id="cnt-name">0/30</span>
+          </div>
+          <div class="control">
+            <input type="text" id="in-name" maxlength="30" placeholder="请输入你的求购商品，如「数据结构教材」" oninput="onChange()"/>
+          </div>
+        </div>
+        <div class="field-hint">请输入求购商品名称</div>
+
+        <div class="field" id="f-desc">
+          <div class="label"><span class="label-left">求购商品补充描述</span></div>
+          <div class="control">
+            <textarea id="in-desc" maxlength="200" placeholder="请补充描述你的需求，如「希望这周能成交」" oninput="onChange()"></textarea>
+            <div class="ta-count"><span id="cnt-desc">0</span>/200</div>
+          </div>
+        </div>
+
+        <div class="field" id="f-price">
+          <div class="label"><span class="label-left"><span class="req">*</span>价格</span></div>
+          <div class="control control-inline">
+            <input type="text" id="in-price" placeholder="请输入你的预算" inputmode="numeric" oninput="onChange()" />
+            <span class="inline-suffix">元</span>
+          </div>
+        </div>
+        <div class="field-hint">请输入预算金额</div>
+
+        <div class="field" id="f-condition">
+          <div class="label"><span class="label-left">期望成色</span></div>
+          <div class="control">
+            <div class="select-wrap">
+              <div class="select placeholder" id="sel-condition" onclick="toggleCondition()">
+                <span id="sel-condition-text">请选择期望成色</span>
+                <span class="chev">▾</span>
+              </div>
+              <div class="dropdown" id="condition-dropdown" style="display:none;">
+                <div class="dropdown-item" onclick="pickCondition('不限')">不限</div>
+                <div class="dropdown-item" onclick="pickCondition('全新')">全新</div>
+                <div class="dropdown-item" onclick="pickCondition('几乎全新')">几乎全新</div>
+                <div class="dropdown-item" onclick="pickCondition('有使用痕迹')">有使用痕迹</div>
+                <div class="dropdown-item" onclick="pickCondition('有瑕疵也能接受')">有瑕疵也能接受</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" id="f-location">
+          <div class="label">
+            <span class="label-left"><span class="req">*</span>交易地点</span>
+            <span class="label-count" id="cnt-location">0/30</span>
+          </div>
+          <div class="control">
+            <input type="text" id="in-location" maxlength="30" placeholder="请输入交易地点" oninput="onChange()" />
+          </div>
+        </div>
+        <div class="field-hint">请输入交易地点</div>
+      </div>
+
+      <div class="tip-bar">
+        💡 温馨提示：发布真实有效的求购信息，更容易被卖家看到哦。
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 3. 求购详情 ========== -->
+  <div class="page" id="page-detail">
+    <div class="nav">
+      <div class="left" onclick="goList()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="title">求购详情</div>
+      <div class="right" onclick="goList()" style="font-size:18px;color:var(--sub);">×</div>
+    </div>
+    <div class="scroll" style="bottom:84px;">
+      <div class="hero-card">
+        <div class="hero-title">
+          <span class="bk-tag">求购</span>
+          <span id="d-title" style="word-break:break-all;">数据结构教材第七版</span>
+        </div>
+        <div class="hero-price" id="d-price">预算 ¥32</div>
+        <div class="hero-meta">
+          <div class="row">📍 <span id="d-location">交易地点：南门奶茶店</span></div>
+          <div class="row">🕒 <span id="d-time">发布时间：2天前</span></div>
+        </div>
+      </div>
+
+      <div class="desc-card">
+        <div class="label">📌 补充说明</div>
+        <div id="d-desc" style="white-space:pre-wrap;">希望这周能面交，节假日也行</div>
+      </div>
+
+      <div class="seller">
+        <div class="av">漫</div>
+        <div class="info">
+          <div class="name" id="d-seller">卖家昵称</div>
+          <div class="stats">在售 12 | 成交 45 | 粉丝 128</div>
+        </div>
+        <div class="contact-btn" onclick="openContact()">联系Ta</div>
+      </div>
+
+      <div class="state" id="d-expired" style="display:none;">
+        <div class="emoji">⏳</div>
+        <div class="text">该求购已下架</div>
+      </div>
+    </div>
+
+    <div class="detail-action">
+      <div class="collect" onclick="toggleCollect(this)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a8a8f" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        <span>收藏</span>
+      </div>
+      <div class="contact" onclick="openContact()">📞 联系Ta</div>
+    </div>
+  </div>
+
+  <!-- ========== 底部 Tab ========== -->
+  <div class="tabbar" id="tabbar">
+    <div class="tab active" data-tab="home" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a2 2 0 01-2 2h-4v-7H10v7H6a2 2 0 01-2-2V10z"/></svg>
+      <span>首页</span>
+    </div>
+    <div class="tab" data-tab="buy" onclick="goList()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <span>求购</span>
+    </div>
+    <div class="tab" data-tab="pub" onclick="goPub()">
+      <div class="pub">+</div>
+    </div>
+    <div class="tab" data-tab="msg" onclick="gotoMsg()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span>信息</span>
+    </div>
+    <div class="tab" data-tab="me" onclick="gotoMe()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+      <span>我的</span>
+    </div>
+  </div>
+
+  <!-- 浮层：发留言 -->
+  <div class="mask" id="contact-mask" onclick="if(event.target===this)closeContact()">
+    <div class="sheet">
+      <div class="sheet-title">发留言</div>
+      <textarea id="msg-input" maxlength="200" oninput="updateMsgCount()">你好，我看到你的求购，我有货想聊聊</textarea>
+      <div class="msg-count"><span id="msg-count">15</span>/200</div>
+      <button class="sheet-send" onclick="sendMessage()">发送</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // ====== 状态切换 ======
+  const pages = {
+    home: document.getElementById('page-home'),
+    list: document.getElementById('page-list'),
+    pub: document.getElementById('page-pub'),
+    publish: document.getElementById('page-publish'),
+    detail: document.getElementById('page-detail'),
+    msg: document.getElementById('page-msg'),
+    me: document.getElementById('page-me'),
+  };
+  function showPage(name) {
+    Object.values(pages).forEach(p => p.classList.remove('active'));
+    pages[name].classList.add('active');
+  }
+
+  function goList() {
+    showPage('list');
+    setActiveTab('buy');
+  }
+  function goHome() {
+    showPage('home');
+    setActiveTab('home');
+  }
+  function goPub() {
+    showPage('pub');
+    setActiveTab('pub');
+  }
+  function gotoMsg() {
+    showPage('msg');
+    setActiveTab('msg');
+  }
+  function gotoMe() {
+    showPage('me');
+    setActiveTab('me');
+  }
+  function setActiveTab(key) {
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === key);
+    });
+  }
+
+  // ====== 列表加载 ======
+  const data = [
+    { id: 1, title: '数据结构教材', price: 32, time: '2天前发布', dist: '500m', icon: '📚', seller: '漫' },
+    { id: 2, title: 'c语言教材', price: 20, time: '2天前发布', dist: '500m', icon: '📘', seller: '漫' },
+    { id: 3, title: '英语六级资料', price: 30, time: '3天前发布', dist: '500m', icon: '📗', seller: '漫' },
+    { id: 4, title: '小风扇', price: 10, time: '3天前发布', dist: '500m', icon: '🌀', seller: '漫' },
+    { id: 5, title: '台灯', price: 26, time: '', dist: '500m', icon: '💡', seller: '漫' },
+  ];
+
+  function loadList(forceRefresh) {
+    const states = ['list-normal','list-loading','list-error','list-empty','list-network','list-noresult','list-expired'];
+    states.forEach(id => document.getElementById(id).style.display = 'none');
+    setActiveTab('buy');
+    showPage('list');
+
+    if (forceRefresh) {
+      document.getElementById('list-loading').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('list-loading').style.display = 'none';
+        document.getElementById('list-normal').style.display = 'block';
+        toast('刷新成功');
+      }, 600);
+      return;
+    }
+    document.getElementById('list-normal').style.display = 'block';
+  }
+
+  // 列表项点击 -> 详情
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.list-item');
+    if (item && pages.list.classList.contains('active')) {
+      const id = parseInt(item.dataset.id, 10);
+      const d = data.find(x => x.id === id);
+      openDetail(d);
+    }
+  });
+
+  function openDetail(d) {
+    showPage('detail');
+    setActiveTab('buy');
+    document.getElementById('d-title').textContent = d.title + '第七版'.replace('第七版第七版','第七版');
+    document.getElementById('d-price').textContent = `预算 ¥${d.price}`;
+    document.getElementById('d-location').textContent = '交易地点：南门奶茶店';
+    document.getElementById('d-time').textContent = '发布时间：' + (d.time || '刚刚');
+    document.getElementById('d-desc').textContent = '希望这周能面交，节假日也行';
+    document.getElementById('d-seller').textContent = '漫小';
+    document.getElementById('d-expired').style.display = 'none';
+    document.querySelector('.detail-action').style.display = 'flex';
+  }
+
+  // ====== 发布求购 ======
+  function openPublish() {
+    showPage('publish');
+    setActiveTab('pub');
+    // 清空错误态
+    ['f-name','f-price','f-location'].forEach(id => document.getElementById(id).classList.remove('error'));
+    ['in-name','in-desc','in-price','in-location'].forEach(el => document.getElementById(el).value = '');
+    document.getElementById('sel-condition').classList.add('placeholder');
+    document.getElementById('sel-condition-text').textContent = '请选择期望成色';
+    document.querySelectorAll('#condition-dropdown .dropdown-item').forEach(it => it.classList.remove('active'));
+    document.getElementById('cnt-name').textContent = '0/30';
+    document.getElementById('cnt-desc').textContent = '0';
+    document.getElementById('cnt-location').textContent = '0/30';
+  }
+
+  function onChange() {
+    // 字数提示
+    document.getElementById('cnt-name').textContent = `${document.getElementById('in-name').value.length}/30`;
+    document.getElementById('cnt-desc').textContent = document.getElementById('in-desc').value.length;
+    document.getElementById('cnt-location').textContent = `${document.getElementById('in-location').value.length}/30`;
+
+    // 价格只允许数字
+    const p = document.getElementById('in-price');
+    p.value = p.value.replace(/[^\d]/g, '');
+
+    // 清除单个字段的错误
+    document.getElementById('f-name').classList.remove('error');
+    document.getElementById('f-price').classList.remove('error');
+    document.getElementById('f-location').classList.remove('error');
+  }
+
+  function toggleCondition() {
+    const d = document.getElementById('condition-dropdown');
+    d.style.display = d.style.display === 'block' ? 'none' : 'block';
+  }
+  function pickCondition(val) {
+    document.getElementById('sel-condition-text').textContent = val;
+    document.getElementById('sel-condition').classList.remove('placeholder');
+    document.querySelectorAll('#condition-dropdown .dropdown-item').forEach(it => {
+      it.classList.toggle('active', it.textContent === val);
+    });
+    document.getElementById('condition-dropdown').style.display = 'none';
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.select-wrap')) {
+      document.getElementById('condition-dropdown').style.display = 'none';
+    }
+  });
+
+  function submitPublish() {
+    const name = document.getElementById('in-name').value.trim();
+    const price = document.getElementById('in-price').value.trim();
+    const location = document.getElementById('in-location').value.trim();
+    let ok = true;
+
+    if (!name) { document.getElementById('f-name').classList.add('error'); ok = false; }
+    if (!price) { document.getElementById('f-price').classList.add('error'); ok = false; }
+    if (!location) { document.getElementById('f-location').classList.add('error'); ok = false; }
+    if (!ok) {
+      toast('请完善必填信息');
+      return;
+    }
+
+    // 模拟网络
+    const btn = document.getElementById('publish-btn');
+    const orig = btn.textContent;
+    btn.textContent = '发布中...';
+    btn.style.opacity = .6;
+
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.opacity = 1;
+      toast('发布成功');
+      // 回到列表并把新条目显示到顶部
+      const newItem = {
+        id: Date.now(),
+        title: name,
+        price: parseInt(price, 10) || 0,
+        time: '刚刚',
+        dist: '500m',
+        icon: '✨',
+        seller: '我'
+      };
+      data.unshift(newItem);
+      renderList();
+      goList();
+    }, 700);
+  }
+
+  function renderList() {
+    const wrap = document.getElementById('list-normal');
+    wrap.innerHTML = data.map(d => `
+      <div class="list-item" data-id="${d.id}">
+        <div class="avatar">${d.icon || '✨'}</div>
+        <div class="list-body">
+          <div class="title-row"><span class="tag">求购</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(d.title)}</span></div>
+          <div class="price-row"><span class="price">¥${d.price}</span><span class="time">${d.time || ''}</span></div>
+          <div class="meta">📍 距离你${d.dist}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ====== 搜索 ======
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    const kw = e.target.value.trim();
+    document.querySelectorAll('#list-normal .list-item').forEach(item => {
+      const t = item.querySelector('.title-row span:last-child').textContent;
+      const match = !kw || t.includes(kw);
+      item.style.display = match ? '' : 'none';
+    });
+    const visible = [...document.querySelectorAll('#list-normal .list-item')].some(i => i.style.display !== 'none');
+    document.getElementById('list-normal').style.display = 'block';
+    document.getElementById('list-empty').style.display = 'none';
+    if (kw && !visible) {
+      document.getElementById('list-normal').style.display = 'none';
+      document.getElementById('list-noresult').style.display = 'flex';
+    } else {
+      document.getElementById('list-noresult').style.display = 'none';
+    }
+  });
+
+  function resetSearch() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-input').dispatchEvent(new Event('input'));
+  }
+
+  // ====== 详情收藏 / 联系 ======
+  function toggleCollect(el) {
+    const active = el.classList.toggle('active');
+    if (active) {
+      el.style.color = 'var(--warn)';
+      el.querySelector('svg').setAttribute('fill', 'currentColor');
+      el.querySelector('span').textContent = '已收藏';
+      toast('已加入收藏');
+    } else {
+      el.style.color = '';
+      el.querySelector('svg').setAttribute('fill', 'none');
+      el.querySelector('span').textContent = '收藏';
+    }
+  }
+
+  function openContact() {
+    const ta = document.getElementById('msg-input');
+    ta.value = '你好，我看到你的求购，我有货想聊聊';
+    document.getElementById('msg-count').textContent = ta.value.length;
+    document.getElementById('contact-mask').classList.add('show');
+  }
+  function closeContact() {
+    document.getElementById('contact-mask').classList.remove('show');
+  }
+  function sendMessage() {
+    const v = document.getElementById('msg-input').value.trim();
+    if (!v) { toast('请输入留言内容'); return; }
+    closeContact();
+    toast('留言已发送');
+  }
+  function updateMsgCount() {
+    document.getElementById('msg-count').textContent = document.getElementById('msg-input').value.length;
+  }
+
+  // ====== Toast ======
+  let toastTimer = null;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+  }
+
+  // ====== 初始：模拟一次加载 ======
+  window.addEventListener('load', () => {
+    loadList(false);
+  });
+
+  // ====== 演示入口（控制台 / 调试） ======
+  window.__demo = function(state) {
+    const map = {
+      loading: 'list-loading',
+      error: 'list-error',
+      empty: 'list-empty',
+      network: 'list-network',
+      noresult: 'list-noresult',
+      expired: 'list-expired'
+    };
+    ['list-normal','list-loading','list-error','list-empty','list-network','list-noresult','list-expired'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    if (state === 'normal') {
+      document.getElementById('list-normal').style.display = 'block';
+    } else {
+      const el = document.getElementById(map[state]);
+      if (el) el.style.display = 'flex';
+    }
+    showPage('list');
+    console.log('切换到列表态：', state);
+  };
+</script>
+
+</body>
+</html>
