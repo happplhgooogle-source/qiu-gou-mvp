@@ -314,6 +314,14 @@
     display: none;
   }
   .field.error + .field-hint { display: block; }
+  .ctl-hint {
+    color: var(--danger);
+    font-size: 12px;
+    margin: 4px 0 0;
+    padding-left: 2px;
+    display: none;
+  }
+  .ctl-hint.show { display: block; }
 
   /* 提示条 */
   .tip-bar {
@@ -507,40 +515,22 @@
     width: 100%;
     cursor: pointer;
   }
-  /* 留言框 */
-  .sheet textarea {
-    width: 100%;
-    height: 96px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 10px 12px;
+  /* 联系方式 sheet */
+  .sheet-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .sheet-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
     font-size: 14px;
-    font-family: inherit;
-    line-height: 1.5;
-    color: var(--text);
-    resize: none;
-    outline: none;
-    box-sizing: border-box;
-  }
-  .sheet textarea::placeholder { color: #b8b8bf; }
-  .msg-count {
-    text-align: right;
-    font-size: 12px;
-    color: var(--sub);
-    margin: 6px 2px 14px;
-  }
-  .sheet-send {
-    width: 100%;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 500;
-    padding: 12px 0;
-    border-radius: 24px;
-    cursor: pointer;
-    box-shadow: 0 6px 14px rgba(59,108,255,.3);
   }
 
   /* 各种空 / 异常态 */
@@ -822,7 +812,7 @@
         </div>
 
         <div class="field" id="f-price">
-          <div class="label"><span class="label-left"><span class="req">*</span>价格</span></div>
+          <div class="label"><span class="label-left"><span class="req">*</span>预算价格</span></div>
           <div class="control control-inline">
             <input type="text" id="in-price" placeholder="请输入你的预算" inputmode="numeric" oninput="onChange()" />
             <span class="inline-suffix">元</span>
@@ -859,6 +849,20 @@
           </div>
         </div>
         <div class="field-hint">请输入交易地点</div>
+
+        <div class="field" id="f-contact">
+          <div class="label"><span class="label-left"><span class="req">*</span>联系方式</span></div>
+          <div id="contact-inputs">
+            <div class="control" style="margin-bottom:12px;">
+              <input type="text" id="in-phone" inputmode="numeric" maxlength="11" placeholder="手机号（11位数字）" oninput="onChange()" />
+            </div>
+            <div class="ctl-hint" id="phone-hint">请输入正确的 11 位手机号</div>
+            <div class="control">
+              <input type="text" id="in-wechat" maxlength="30" placeholder="微信号（选填）" />
+            </div>
+          </div>
+        </div>
+        <div class="field-hint">请至少填写手机号或微信号</div>
       </div>
 
       <div class="tip-bar">
@@ -880,7 +884,7 @@
       <div class="hero-card">
         <div class="hero-title">
           <span class="bk-tag">求购</span>
-          <span id="d-title" style="word-break:break-all;">数据结构教材第七版</span>
+          <span id="d-title" style="word-break:break-all;">数据结构教材</span>
         </div>
         <div class="hero-price" id="d-price">预算 ¥32</div>
         <div class="hero-meta">
@@ -889,9 +893,9 @@
         </div>
       </div>
 
-      <div class="desc-card">
+      <div class="desc-card" id="d-desc-card" style="display:none;">
         <div class="label">📌 补充说明</div>
-        <div id="d-desc" style="white-space:pre-wrap;">希望这周能面交，节假日也行</div>
+        <div id="d-desc" style="white-space:pre-wrap;"></div>
       </div>
 
       <div class="seller">
@@ -941,13 +945,15 @@
     </div>
   </div>
 
-  <!-- 浮层：发留言 -->
+  <!-- 浮层：联系方式 -->
   <div class="mask" id="contact-mask" onclick="if(event.target===this)closeContact()">
     <div class="sheet">
-      <div class="sheet-title">发留言</div>
-      <textarea id="msg-input" maxlength="200" oninput="updateMsgCount()">你好，我看到你的求购，我有货想聊聊</textarea>
-      <div class="msg-count"><span id="msg-count">15</span>/200</div>
-      <button class="sheet-send" onclick="sendMessage()">发送</button>
+      <div class="sheet-title">
+        <span class="sheet-icon">📱</span>
+        联系方式
+      </div>
+      <div id="contact-body"></div>
+      <div class="sheet-tip">⚠ 使交易有保障，请当面交易并核实物品</div>
     </div>
   </div>
 
@@ -999,12 +1005,15 @@
 
   // ====== 列表加载 ======
   const data = [
-    { id: 1, title: '数据结构教材', price: 32, time: '2天前发布', dist: '500m', icon: '📚', seller: '漫' },
+    { id: 1, title: '数据结构教材', price: 32, time: '2天前发布', dist: '500m', icon: '📚', seller: '漫', desc: '严蔚敏版，品相九成新，可小刀' },
     { id: 2, title: 'c语言教材', price: 20, time: '2天前发布', dist: '500m', icon: '📘', seller: '漫' },
-    { id: 3, title: '英语六级资料', price: 30, time: '3天前发布', dist: '500m', icon: '📗', seller: '漫' },
+    { id: 3, title: '英语六级资料', price: 30, time: '3天前发布', dist: '500m', icon: '📗', seller: '漫', desc: '含历年真题和答案解析，自取优先' },
     { id: 4, title: '小风扇', price: 10, time: '3天前发布', dist: '500m', icon: '🌀', seller: '漫' },
-    { id: 5, title: '台灯', price: 26, time: '', dist: '500m', icon: '💡', seller: '漫' },
+    { id: 5, title: '台灯', price: 26, time: '', dist: '500m', icon: '💡', seller: '漫', desc: '可充电款，用了半年，成色不错' },
   ];
+
+  // ====== 详情页联系方式渲染用的当前条目 ======
+  let currentDetailContact = null;
 
   function loadList(forceRefresh) {
     const states = ['list-normal','list-loading','list-error','list-empty','list-network','list-noresult','list-expired'];
@@ -1037,14 +1046,23 @@
   function openDetail(d) {
     showPage('detail');
     setActiveTab('buy');
-    document.getElementById('d-title').textContent = d.title + '第七版'.replace('第七版第七版','第七版');
+    document.getElementById('d-title').textContent = d.title;
     document.getElementById('d-price').textContent = `预算 ¥${d.price}`;
     document.getElementById('d-location').textContent = '交易地点：南门奶茶店';
     document.getElementById('d-time').textContent = '发布时间：' + (d.time || '刚刚');
-    document.getElementById('d-desc').textContent = '希望这周能面交，节假日也行';
+    // 补充说明：填了「有意义的」内容才显示，没填或单字/纯空格则整个卡片隐藏
+    const descCard = document.getElementById('d-desc-card');
+    const desc = (d.desc || '').trim();
+    if (desc.length >= 2) {
+      document.getElementById('d-desc').textContent = desc;
+      descCard.style.display = 'block';
+    } else {
+      descCard.style.display = 'none';
+    }
     document.getElementById('d-seller').textContent = '漫小';
     document.getElementById('d-expired').style.display = 'none';
     document.querySelector('.detail-action').style.display = 'flex';
+    currentDetailContact = d.contact || null;
   }
 
   // ====== 发布求购 ======
@@ -1052,14 +1070,18 @@
     showPage('publish');
     setActiveTab('pub');
     // 清空错误态
-    ['f-name','f-price','f-location'].forEach(id => document.getElementById(id).classList.remove('error'));
-    ['in-name','in-desc','in-price','in-location'].forEach(el => document.getElementById(el).value = '');
+    ['f-name','f-price','f-location','f-contact'].forEach(id => document.getElementById(id).classList.remove('error'));
+    ['in-name','in-desc','in-price','in-location','in-phone','in-wechat'].forEach(el => document.getElementById(el).value = '');
     document.getElementById('sel-condition').classList.add('placeholder');
     document.getElementById('sel-condition-text').textContent = '请选择期望成色';
     document.querySelectorAll('#condition-dropdown .dropdown-item').forEach(it => it.classList.remove('active'));
     document.getElementById('cnt-name').textContent = '0/30';
     document.getElementById('cnt-desc').textContent = '0';
     document.getElementById('cnt-location').textContent = '0/30';
+
+    // 联系方式：每次发布都需填写
+    document.getElementById('contact-inputs').style.display = 'block';
+    document.getElementById('phone-hint').classList.remove('show');
   }
 
   function onChange() {
@@ -1072,10 +1094,15 @@
     const p = document.getElementById('in-price');
     p.value = p.value.replace(/[^\d]/g, '');
 
+    // 手机号：实时只保留数字（最多 11 位由 maxlength 控制）
+    const ph = document.getElementById('in-phone');
+    ph.value = ph.value.replace(/\D/g, '').slice(0, 11);
+
     // 清除单个字段的错误
     document.getElementById('f-name').classList.remove('error');
     document.getElementById('f-price').classList.remove('error');
     document.getElementById('f-location').classList.remove('error');
+    document.getElementById('f-contact').classList.remove('error');
   }
 
   function toggleCondition() {
@@ -1105,6 +1132,27 @@
     if (!name) { document.getElementById('f-name').classList.add('error'); ok = false; }
     if (!price) { document.getElementById('f-price').classList.add('error'); ok = false; }
     if (!location) { document.getElementById('f-location').classList.add('error'); ok = false; }
+
+    const phone = document.getElementById('in-phone').value.trim();
+    const wechat = document.getElementById('in-wechat').value.trim();
+    const phoneHint = document.getElementById('phone-hint');
+    let contact;
+    let contactBad = false;
+    if (!phone && !wechat) {
+      document.getElementById('f-contact').classList.add('error');
+      ok = false;
+      contactBad = true;
+    } else {
+      // 手机号：填了就必须是正确的 11 位数字
+      if (phone && !/^1\d{10}$/.test(phone)) {
+        phoneHint.classList.add('show');
+        document.getElementById('f-contact').classList.add('error');
+        ok = false;
+        contactBad = true;
+      }
+      if (!contactBad) contact = { phone: phone, wechat: wechat };
+    }
+
     if (!ok) {
       toast('请完善必填信息');
       return;
@@ -1128,7 +1176,9 @@
         time: '刚刚',
         dist: '500m',
         icon: '✨',
-        seller: '我'
+        seller: '我',
+        contact: contact,
+        desc: document.getElementById('in-desc').value.trim()
       };
       data.unshift(newItem);
       renderList();
@@ -1194,22 +1244,80 @@
   }
 
   function openContact() {
-    const ta = document.getElementById('msg-input');
-    ta.value = '你好，我看到你的求购，我有货想聊聊';
-    document.getElementById('msg-count').textContent = ta.value.length;
+    renderContactBody(currentDetailContact);
     document.getElementById('contact-mask').classList.add('show');
   }
   function closeContact() {
     document.getElementById('contact-mask').classList.remove('show');
   }
-  function sendMessage() {
-    const v = document.getElementById('msg-input').value.trim();
-    if (!v) { toast('请输入留言内容'); return; }
-    closeContact();
-    toast('留言已发送');
+
+  function renderContactBody(contact) {
+    const c = contact || { phone: '13812341234', wechat: 'manbo_123' };
+    const phone = (c.phone || '').trim();
+    const wechat = (c.wechat || '').trim();
+    const rows = [];
+    if (phone) {
+      const masked = phone.length === 11 ? phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : phone;
+      rows.push({ label: '手机', value: masked, raw: phone, action: '手机号' });
+    }
+    if (wechat) {
+      rows.push({ label: '微信', value: wechat, raw: wechat, action: '微信号' });
+    }
+    const body = document.getElementById('contact-body');
+    if (!rows.length) {
+      body.innerHTML = '<div class="msg-empty">该求购未留下联系方式</div>';
+      return;
+    }
+    body.innerHTML = rows.map(r => `
+      <div class="sheet-row">
+        <span>${r.label}：<span class="v">${escapeHtml(r.value)}</span></span>
+        <button class="copy-btn" data-raw="${escapeHtml(r.raw)}" data-label="${r.action}">复制${r.action}</button>
+      </div>
+    `).join('');
   }
-  function updateMsgCount() {
-    document.getElementById('msg-count').textContent = document.getElementById('msg-input').value.length;
+
+  document.getElementById('contact-body').addEventListener('click', (e) => {
+    const btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    copyText(btn.dataset.raw, btn.dataset.label, btn);
+  });
+
+  function copyText(text, label, btn) {
+    const onOk = () => { toast(label + '已复制'); flashCopyBtn(btn); };
+    const onFail = () => { toast('复制失败，请手动选择'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onOk).catch(() => {
+        if (fallbackCopy(text)) onOk(); else onFail();
+      });
+    } else {
+      if (fallbackCopy(text)) onOk(); else onFail();
+    }
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function flashCopyBtn(btn) {
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '已复制';
+    btn.style.background = '#e8f5e9';
+    btn.style.color = '#2e7d32';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 1200);
   }
 
   // ====== Toast ======
